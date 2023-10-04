@@ -13,7 +13,7 @@ public class APISearchThread extends Thread {
     private SearchResponseViewModel viewModel;
     public APISearchThread(String searchKey, Activity uiActivity, SearchResponseViewModel viewModel) {
         this.searchkey = searchKey;
-        baseUrl ="https://pixabay.com/api/";
+        baseUrl ="https://pixabay.com/api/"; // TODO
         remoteUtilities = RemoteUtilities.getInstance(uiActivity);
         this.viewModel = viewModel;
     }

@@ -40,43 +40,29 @@ public class MainActivity extends AppCompatActivity {
         picture.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.INVISIBLE);
 
-        loadImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                picture.setVisibility(View.INVISIBLE);
-                String searchValues = searchKey.getText().toString();
-                APISearchThread searchThread = new APISearchThread(searchValues,MainActivity.this,sViewModel);
-                progressBar.setVisibility(View.VISIBLE);
-                searchThread.start();
-            }
+        loadImage.setOnClickListener(view -> {
+            picture.setVisibility(View.INVISIBLE);
+            String searchValues = searchKey.getText().toString();
+            APISearchThread searchThread = new APISearchThread(searchValues,MainActivity.this,sViewModel);
+            progressBar.setVisibility(View.VISIBLE);
+            searchThread.start();
         });
 
-        sViewModel.response.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                progressBar.setVisibility(View.INVISIBLE);
-                Toast.makeText(MainActivity.this, "Search Complete",Toast.LENGTH_LONG).show();
-                ImageRetrievalThread imageRetrievalThread = new ImageRetrievalThread(MainActivity.this, sViewModel, imageViewModel, errorViewModel);
-                progressBar.setVisibility(View.VISIBLE);
-                imageRetrievalThread.start();
+        sViewModel.response.observe(this, s -> {
+            progressBar.setVisibility(View.INVISIBLE);
+            Toast.makeText(MainActivity.this, "Search Complete",Toast.LENGTH_LONG).show();
+            ImageRetrievalThread imageRetrievalThread = new ImageRetrievalThread(MainActivity.this, sViewModel, imageViewModel, errorViewModel);
+            progressBar.setVisibility(View.VISIBLE);
+            imageRetrievalThread.start();
 
-            }
         });
 
-        imageViewModel.image.observe(this, new Observer<Bitmap>() {
-            @Override
-            public void onChanged(Bitmap bitmap) {
-                progressBar.setVisibility(View.INVISIBLE);
-                picture.setVisibility(View.VISIBLE);
-                picture.setImageBitmap(imageViewModel.getImage());
-            }
+        imageViewModel.image.observe(this, bitmap -> {
+            progressBar.setVisibility(View.INVISIBLE);
+            picture.setVisibility(View.VISIBLE);
+            picture.setImageBitmap(imageViewModel.getImage());
         });
-        errorViewModel.errorCode.observe(this, new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer integer) {
-                progressBar.setVisibility(View.INVISIBLE);
-            }
-        });
+        errorViewModel.errorCode.observe(this, integer -> progressBar.setVisibility(View.INVISIBLE));
     }
 
 

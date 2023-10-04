@@ -28,20 +28,20 @@ public class ImageRetrievalThread extends Thread {
         this.sViewModel = viewModel;
         this.imageViewModel = imageViewModel;
         this.errorViewModel = errorViewModel;
-        this.uiActivity=uiActivity;
+        this.uiActivity = uiActivity;
     }
-    public void run(){
+
+    public void run() {
         String endpoint = getEndpoint(sViewModel.getResponse());
-        if(endpoint==null){
+        if (endpoint == null) {
             uiActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(uiActivity,"No image found",Toast.LENGTH_LONG).show();
-                    errorViewModel.setErrorCode(errorViewModel.getErrorCode()+1);
+                    Toast.makeText(uiActivity, "No image found", Toast.LENGTH_LONG).show();
+                    errorViewModel.setErrorCode(errorViewModel.getErrorCode() + 1);
                 }
             });
-        }
-        else {
+        } else {
             Bitmap image = getImageFromUrl(endpoint);
 
             try {
@@ -52,12 +52,12 @@ public class ImageRetrievalThread extends Thread {
         }
     }
 
-    private String getEndpoint(String data){
+    private String getEndpoint(String data) {
         String imageUrl = null;
         try {
             JSONObject jBase = new JSONObject(data);
             JSONArray jHits = jBase.getJSONArray("hits");
-            if(jHits.length()>0){
+            if (jHits.length() > 0) {
                 JSONObject jHitsItem = jHits.getJSONObject(0);
                 imageUrl = jHitsItem.getString("largeImageURL");
             }
@@ -67,13 +67,13 @@ public class ImageRetrievalThread extends Thread {
         return imageUrl;
     }
 
-    private Bitmap getImageFromUrl(String imageUrl){
+    private Bitmap getImageFromUrl(String imageUrl) {
         Bitmap image = null;
         Uri.Builder url = Uri.parse(imageUrl).buildUpon();
         String urlString = url.build().toString();
         HttpURLConnection connection = remoteUtilities.openConnection(urlString);
-        if(connection!=null){
-            if(remoteUtilities.isConnectionOkay(connection)==true){
+        if (connection != null) {
+            if (remoteUtilities.isConnectionOkay(connection)) {
                 image = getBitmapFromConnection(connection);
                 connection.disconnect();
             }
@@ -81,14 +81,13 @@ public class ImageRetrievalThread extends Thread {
         return image;
     }
 
-    public Bitmap getBitmapFromConnection(HttpURLConnection conn){
+    public Bitmap getBitmapFromConnection(HttpURLConnection conn) {
         Bitmap data = null;
         try {
             InputStream inputStream = conn.getInputStream();
             byte[] byteData = getByteArrayFromInputStream(inputStream);
-            data = BitmapFactory.decodeByteArray(byteData,0,byteData.length);
-        }
-        catch (IOException e){
+            data = BitmapFactory.decodeByteArray(byteData, 0, byteData.length);
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return data;

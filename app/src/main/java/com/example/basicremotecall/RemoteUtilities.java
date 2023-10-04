@@ -58,7 +58,7 @@ public class RemoteUtilities {
 
     public boolean isConnectionOkay(HttpURLConnection conn){
         try {
-            if(conn.getResponseCode()==HttpURLConnection.HTTP_OK){
+            if(conn.getResponseCode() == HttpURLConnection.HTTP_OK){
                 return true;
             }
         } catch (IOException e) {
