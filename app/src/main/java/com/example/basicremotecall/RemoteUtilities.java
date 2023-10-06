@@ -17,38 +17,38 @@ public class RemoteUtilities {
 
     public static RemoteUtilities remoteUtilities = null;
     private Activity uiActivity;
-    public RemoteUtilities(Activity uiActivity){
 
+    public RemoteUtilities(Activity uiActivity) {
         this.uiActivity = uiActivity;
     }
 
-    public void setUiActivity(Activity uiActivity){
+    public void setUiActivity(Activity uiActivity) {
         this.uiActivity = uiActivity;
     }
 
-    public static RemoteUtilities getInstance(Activity uiActivity){
-        if(remoteUtilities == null){
+    public static RemoteUtilities getInstance(Activity uiActivity) {
+        if (remoteUtilities == null) {
             remoteUtilities = new RemoteUtilities(uiActivity);
         }
         remoteUtilities.setUiActivity(uiActivity);
         return remoteUtilities;
     }
 
-    public HttpURLConnection openConnection(String urlString)  {
+    public HttpURLConnection openConnection(String urlString) {
         HttpURLConnection conn = null;
         try {
             URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
-        } catch (MalformedURLException e){
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(conn == null){
+        if (conn == null) {
             uiActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(uiActivity,"Check Internet",Toast.LENGTH_LONG).show();
+                    Toast.makeText(uiActivity, "Check Internet", Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -56,9 +56,9 @@ public class RemoteUtilities {
         return conn;
     }
 
-    public boolean isConnectionOkay(HttpURLConnection conn){
+    public boolean isConnectionOkay(HttpURLConnection conn) {
         try {
-            if(conn.getResponseCode() == HttpURLConnection.HTTP_OK){
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 return true;
             }
         } catch (IOException e) {
@@ -66,21 +66,20 @@ public class RemoteUtilities {
             uiActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(uiActivity,"Problem with API Endpoint",Toast.LENGTH_LONG).show();
+                    Toast.makeText(uiActivity, "Problem with API Endpoint", Toast.LENGTH_LONG).show();
                 }
             });
         }
         return false;
     }
 
-    public String getResponseString(HttpURLConnection conn){
+    public String getResponseString(HttpURLConnection conn) {
         String data = null;
         try {
             InputStream inputStream = conn.getInputStream();
             byte[] byteData = IOUtils.toByteArray(inputStream);
             data = new String(byteData, StandardCharsets.UTF_8);
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return data;
