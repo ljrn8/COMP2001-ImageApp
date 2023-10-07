@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -14,6 +15,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageRetrievalThread extends Thread {
 
@@ -31,9 +34,35 @@ public class ImageRetrievalThread extends Thread {
         this.uiActivity = uiActivity;
     }
 
+    // from android docs
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+
     public void run() {
-        String endpoint = getEndpoint(sViewModel.getResponse());
-        if (endpoint == null) {
+        List<String> endpoints = getEndpoint(sViewModel.getResponse());
+
+        if (endpoints.size() == 0) {
             uiActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -41,30 +70,52 @@ public class ImageRetrievalThread extends Thread {
                     errorViewModel.setErrorCode(errorViewModel.getErrorCode() + 1);
                 }
             });
+
         } else {
-            Bitmap image = getImageFromUrl(endpoint);
+
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inJustDecodeBounds = true;
+//            options.inSampleSize = 2;
+//            options.inPreferredConfig = Bitmap.Config.RGB_565;
+//            // BitmapFactory.decodeResource(uiActivity.getResources(), R.mipmap.hqimage, options);
+
+            List<Bitmap> incomingBitmaps = new ArrayList<>();
+//            uiActivity.imageLoadMessage(incomingBitmaps.size());
+            endpoints.forEach(endpoint -> incomingBitmaps.add(getImageFromUrl(endpoint)));
 
             try {
                 Thread.sleep(3000);
-            } catch (Exception e) {
-            }
-            imageViewModel.setImage(image);
+            } catch (Exception e) {}
+            imageViewModel.setImages(incomingBitmaps);
         }
     }
-
-    private String getEndpoint(String data) {
-        String imageUrl = null;
+    public final String t = "res"; // log tag
+    private List<String> getEndpoint(String data) {
+        List<String> imageUrls = new ArrayList<>();
         try {
             JSONObject jBase = new JSONObject(data);
+
+            Log.i(t, "json res >>" + jBase.toString());
             JSONArray jHits = jBase.getJSONArray("hits");
-            if (jHits.length() > 0) {
-                JSONObject jHitsItem = jHits.getJSONObject(0);
-                imageUrl = jHitsItem.getString("largeImageURL");
+
+            for (int i = 0; i < jHits.length(); i++) {
+
+                Log.i(t, "getting hit object n - " + i);
+                JSONObject jHitsItem = jHits.getJSONObject(i);
+                String imageUrl = jHitsItem.getString("largeImageURL");
+                imageUrls.add(imageUrl);
             }
+
+//            if (jHits.length() > 0) {
+//                // for (JSONObject jHitsItem: jHits.getJSONArray())
+//                JSONObject jHitsItem = jHits.getJSONObject(0);
+//                imageUrl = jHitsItem.getString("largeImageURL");
+//            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return imageUrl;
+        return imageUrls;
     }
 
     private Bitmap getImageFromUrl(String imageUrl) {

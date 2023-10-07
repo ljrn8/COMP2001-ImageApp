@@ -5,16 +5,28 @@ import android.graphics.Bitmap;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.List;
+
 public class ImageViewModel  extends ViewModel {
-    public MutableLiveData<Bitmap> image;
+
+
+    public MutableLiveData<List<Bitmap>> images;
+
     public ImageViewModel(){
-        image = new MutableLiveData<Bitmap>();
+        images = new MutableLiveData<List<Bitmap>>();
     }
 
-    public Bitmap getImage(){
-        return image.getValue();
+    public List<Bitmap> getImages(){
+        return images.getValue();
     }
-    public void setImage(Bitmap bitmap){
-        image.postValue(bitmap);
+
+    public void addImage(Bitmap bitmap) {
+        List<Bitmap> newImages = getImages();
+        newImages.add(bitmap);
+        images.postValue(newImages);
+    }
+
+    public void setImages(List<Bitmap> bitmaps){
+        images.postValue(bitmaps);
     }
 }
