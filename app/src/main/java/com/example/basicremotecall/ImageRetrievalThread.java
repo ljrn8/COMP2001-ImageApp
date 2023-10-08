@@ -5,7 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,7 +64,6 @@ public class ImageRetrievalThread extends Thread {
         return inSampleSize;
     }
 
-
     public void run() {
         List<String> endpoints = getEndpoint(sViewModel.getResponse());
 
@@ -73,15 +78,15 @@ public class ImageRetrievalThread extends Thread {
 
         } else {
 
-//            BitmapFactory.Options options = new BitmapFactory.Options();
-//            options.inJustDecodeBounds = true;
-//            options.inSampleSize = 2;
-//            options.inPreferredConfig = Bitmap.Config.RGB_565;
-//            // BitmapFactory.decodeResource(uiActivity.getResources(), R.mipmap.hqimage, options);
 
             List<Bitmap> incomingBitmaps = new ArrayList<>();
-//            uiActivity.imageLoadMessage(incomingBitmaps.size());
-            endpoints.forEach(endpoint -> incomingBitmaps.add(getImageFromUrl(endpoint)));
+            Log.i(t, "turning url -> bitmap");
+
+            endpoints.forEach(endpoint -> {
+                incomingBitmaps.add(getImageFromUrl(endpoint));
+                Log.i(t, "encoded a bitmap");
+            });
+
 
             try {
                 Thread.sleep(3000);
@@ -117,6 +122,7 @@ public class ImageRetrievalThread extends Thread {
         }
         return imageUrls;
     }
+
 
     private Bitmap getImageFromUrl(String imageUrl) {
         Bitmap image = null;

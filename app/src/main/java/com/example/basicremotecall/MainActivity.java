@@ -1,6 +1,7 @@
 package com.example.basicremotecall;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -95,13 +96,12 @@ public class MainActivity extends AppCompatActivity {
         sViewModel.response.observe(this, s -> {
             progressBar.setVisibility(View.INVISIBLE);
             Toast.makeText(MainActivity.        // toggle
-this, "Search Complete",Toast.LENGTH_LONG).show();
+this, "Search Complete, Downloading Images",Toast.LENGTH_LONG).show();
             ImageRetrievalThread imageRetrievalThread = new ImageRetrievalThread(MainActivity.this, sViewModel, imageViewModel, errorViewModel);
             progressBar.setVisibility(View.VISIBLE);
             imageRetrievalThread.start();
 
         });
-
 
         linearLayout = findViewById(R.id.linear);
 
@@ -110,28 +110,15 @@ this, "Search Complete",Toast.LENGTH_LONG).show();
             progressBar.setVisibility(View.INVISIBLE);
             Log.i(t, bitmaps.toString());
             linearLayout.removeAllViews();
+            imagesViews.clear();
+
             for (int i = 0; i < bitmaps.size(); i++) {
                 ImageView imageView = new ImageView(this);
-                imageView.setLayoutParams(new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
                 imageView.setImageBitmap(imageViewModel.getImages().get(i));
-                linearLayout.addView(imageView);
+                imagesViews.add(imageView);
+                // TODO select listeneres here
 
-                // grid TODO
-                ImageView copyImageView = new ImageView(this); // Replace 'this' with your context
-                copyImageView.setImageDrawable(imageView.getDrawable());
-                copyImageView.setLayoutParams(new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-                GridLayout.Spec rowSpec = GridLayout.spec(i / 2, 1); // row
-                GridLayout.Spec colSpec = GridLayout.spec(i % 2, 1); // col
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, colSpec);
-                // params.width = 0;
-                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                copyImageView.setLayoutParams(params);
-                grid.addView(copyImageView);
-
+                fillLayouts();
 
                 Log.i(t, "observer added image n " + i + "bitmap = " + imageView);
             }
@@ -139,29 +126,85 @@ this, "Search Complete",Toast.LENGTH_LONG).show();
         errorViewModel.errorCode.observe(this, integer -> progressBar.setVisibility(View.INVISIBLE));
 
         toggle = findViewById(R.id.toggle);
-        toggle.setOnClickListener(v -> {
-            toggleGrid();
+        toggle.setOnClickListener(v -> toggleGrid());
+
+        // TODO DEL default testing images
+        for (int i = 0; i < 25; i++) {
+            ImageView im = new ImageView(this);
+            im.setImageResource(R.drawable.ic_launcher_foreground);
+            imagesViews.add(im);
+            fillLayouts();
+        }
+
+
+        // TODO GRID VIEW
+    }
+
+
+    public Bitmap resizeImageByWidth(Bitmap originalImage, int targetWidth) {
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+        float scaleFactor = ((float) targetWidth) / width;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleFactor, scaleFactor);
+
+        return Bitmap.createBitmap(
+                originalImage, 0, 0, width, height, matrix, false);
+    }
+
+
+    List<ImageView> imagesViews = new ArrayList<>();
+
+    public void fillLayouts() {
+        String t = "layouts";
+
+        // LL
+        linearLayout.removeAllViews();
+        imagesViews.forEach(image -> {
+            Log.i(t, "added image linear layout -> " + image.toString());
+            image.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            linearLayout.addView(image);
         });
-    }
 
-    public void imageLoadMessage(int n) {
-        Toast.makeText(this, "loading " + n + " images ..", Toast.LENGTH_LONG)
-                .show();
-    }
+        // GRID
+        grid.removeAllViews();
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        for (int i = 0; i < imagesViews.size(); i++) {
+            ImageView oldImageView = imagesViews.get(i);
 
+            ImageView imageView = new ImageView(this);
+            imageView.setImageDrawable(oldImageView.getDrawable());
+
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = screenWidth / 2;
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+
+            imageView.setLayoutParams(params);
+
+            GridLayout.Spec rowSpec = GridLayout.spec(i / 2); // row
+            GridLayout.Spec colSpec = GridLayout.spec(i % 2); // col
+            GridLayout.LayoutParams gridParams = new GridLayout.LayoutParams(rowSpec, colSpec);
+            imageView.setLayoutParams(gridParams);
+            Log.i(t, "added image to grid layout -> [" + (i / 2) + "][" + (i % 2) + "]" + " " + imageView.toString());
+            grid.addView(imageView);
+        }
+    }
 
     boolean isGrid = false;
     public void toggleGrid() {
-
         if (!isGrid) {
             scrollNormal.setVisibility(View.INVISIBLE);
             scrollGrid.setVisibility(View.VISIBLE);
             isGrid = true;
+
         } else {
             scrollNormal.setVisibility(View.VISIBLE);
             scrollGrid.setVisibility(View.INVISIBLE);
             isGrid = false;
         }
+        fillLayouts();
     }
 
     public final String t = "res";
