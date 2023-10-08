@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -54,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    ScrollView scrollNormal, scrollGrid;
-    GridLayout grid;
+    ScrollView scrollNormal;
+    GridView gridView;
     LinearLayout linearLayout;
 
 
@@ -69,13 +70,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        grid = findViewById(R.id.grid);
-        scrollGrid = findViewById(R.id.scrollGrid);
-
-        // hide grid
-        scrollGrid.setVisibility(View.INVISIBLE);
-
         scrollNormal = findViewById(R.id.scroll);
+        gridView = findViewById(R.id.gridView);
+        gridView.setVisibility(View.INVISIBLE);
+
 
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
@@ -135,9 +133,6 @@ this, "Search Complete, Downloading Images",Toast.LENGTH_LONG).show();
             imagesViews.add(im);
             fillLayouts();
         }
-
-
-        // TODO GRID VIEW
     }
 
 
@@ -169,39 +164,42 @@ this, "Search Complete, Downloading Images",Toast.LENGTH_LONG).show();
         });
 
         // GRID
-        grid.removeAllViews();
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        for (int i = 0; i < imagesViews.size(); i++) {
-            ImageView oldImageView = imagesViews.get(i);
+        ImageGridAdapter adapter = new ImageGridAdapter(this, imagesViews); // TODO copy?
+        gridView.setAdapter(adapter);
 
-            ImageView imageView = new ImageView(this);
-            imageView.setImageDrawable(oldImageView.getDrawable());
 
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = screenWidth / 2;
-            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-
-            imageView.setLayoutParams(params);
-
-            GridLayout.Spec rowSpec = GridLayout.spec(i / 2); // row
-            GridLayout.Spec colSpec = GridLayout.spec(i % 2); // col
-            GridLayout.LayoutParams gridParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-            imageView.setLayoutParams(gridParams);
-            Log.i(t, "added image to grid layout -> [" + (i / 2) + "][" + (i % 2) + "]" + " " + imageView.toString());
-            grid.addView(imageView);
-        }
+//        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+//        for (int i = 0; i < imagesViews.size(); i++) {
+//            ImageView oldImageView = imagesViews.get(i);
+//
+//            ImageView imageView = new ImageView(this);
+//            imageView.setImageDrawable(oldImageView.getDrawable());
+//
+//            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+//            params.width = screenWidth / 2;
+//            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+//
+//            imageView.setLayoutParams(params);
+//
+//            GridLayout.Spec rowSpec = GridLayout.spec(i / 2); // row
+//            GridLayout.Spec colSpec = GridLayout.spec(i % 2); // col
+//            GridLayout.LayoutParams gridParams = new GridLayout.LayoutParams(rowSpec, colSpec);
+//            imageView.setLayoutParams(gridParams);
+//            Log.i(t, "added image to grid layout -> [" + (i / 2) + "][" + (i % 2) + "]" + " " + imageView.toString());
+//            grid.addView(imageView);
+//        }
     }
 
     boolean isGrid = false;
     public void toggleGrid() {
         if (!isGrid) {
             scrollNormal.setVisibility(View.INVISIBLE);
-            scrollGrid.setVisibility(View.VISIBLE);
+            gridView.setVisibility(View.VISIBLE);
             isGrid = true;
 
         } else {
             scrollNormal.setVisibility(View.VISIBLE);
-            scrollGrid.setVisibility(View.INVISIBLE);
+            gridView.setVisibility(View.INVISIBLE);
             isGrid = false;
         }
         fillLayouts();

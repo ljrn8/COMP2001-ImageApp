@@ -40,29 +40,7 @@ public class ImageRetrievalThread extends Thread {
         this.uiActivity = uiActivity;
     }
 
-    // from android docs
-    public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
 
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
 
     public void run() {
         List<String> endpoints = getEndpoint(sViewModel.getResponse());
@@ -107,15 +85,10 @@ public class ImageRetrievalThread extends Thread {
 
                 Log.i(t, "getting hit object n - " + i);
                 JSONObject jHitsItem = jHits.getJSONObject(i);
-                String imageUrl = jHitsItem.getString("largeImageURL");
+
+                String imageUrl = jHitsItem.getString("webformatURL"); // or webformatURL previewURL
                 imageUrls.add(imageUrl);
             }
-
-//            if (jHits.length() > 0) {
-//                // for (JSONObject jHitsItem: jHits.getJSONArray())
-//                JSONObject jHitsItem = jHits.getJSONObject(0);
-//                imageUrl = jHitsItem.getString("largeImageURL");
-//            }
 
         } catch (JSONException e) {
             e.printStackTrace();
