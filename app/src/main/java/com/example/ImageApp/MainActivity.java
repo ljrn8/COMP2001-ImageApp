@@ -1,16 +1,16 @@
-package com.example.basicremotecall;
+package com.example.ImageApp;
 
+import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -19,12 +19,18 @@ import android.widget.ScrollView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,25 +41,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBar;
     EditText searchKey;
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu, menu);
-//        return true;
-//    }
 
-    @Override // TODO menu items response here
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_item1) {
-            // Handle item 1 click
-            return true;
-        } else if (id == R.id.action_item2) {
-            // Handle item 2 click
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     ScrollView scrollNormal;
     GridView gridView;
@@ -74,10 +62,6 @@ public class MainActivity extends AppCompatActivity {
         gridView = findViewById(R.id.gridView);
         gridView.setVisibility(View.INVISIBLE);
 
-
-//        Toolbar toolbar = findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-
         loadImage = findViewById(R.id.loadImage);
         progressBar = findViewById(R.id.progressBarId);
         searchKey = findViewById(R.id.inputSearch);
@@ -88,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             String searchValues = searchKey.getText().toString();
             APISearchThread searchThread = new APISearchThread(searchValues,MainActivity.this,sViewModel);
             progressBar.setVisibility(View.VISIBLE);
+            loadImage.setEnabled(false);
             searchThread.start();
         });
 
@@ -114,41 +99,74 @@ this, "Search Complete, Downloading Images",Toast.LENGTH_LONG).show();
                 ImageView imageView = new ImageView(this);
                 imageView.setImageBitmap(imageViewModel.getImages().get(i));
                 imagesViews.add(imageView);
-                // TODO select listeneres here
+
+
+                int finalI = i;
+                imageView.setOnClickListener(v -> showPopup(imageViewModel.getImages().get(finalI)));
 
                 fillLayouts();
-
                 Log.i(t, "observer added image n " + i + "bitmap = " + imageView);
             }
+            loadImage.setEnabled(true);
         });
-        errorViewModel.errorCode.observe(this, integer -> progressBar.setVisibility(View.INVISIBLE));
+
+        errorViewModel.errorCode.observe(this, integer -> {
+            loadImage.setEnabled(true);
+            progressBar.setVisibility(View.INVISIBLE);
+        });
 
         toggle = findViewById(R.id.toggle);
         toggle.setOnClickListener(v -> toggleGrid());
 
-        // TODO DEL default testing images
-        for (int i = 0; i < 25; i++) {
-            ImageView im = new ImageView(this);
-            im.setImageResource(R.drawable.ic_launcher_foreground);
-            imagesViews.add(im);
-            fillLayouts();
+
+
+    }
+
+
+    private void uploadImage(Bitmap bitmap) {
+        File imageFile = new File(this.getCacheDir(), "image.jpg"); // Create a temporary file
+        try {
+            FileOutputStream fos = new FileOutputStream(imageFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos); // Save the bitmap to the file
+            fos.flush();
+            fos.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+        // https://www.youtube.com/watch?v=CQ5qcJetYAI
+        final String randomKey = UUID.randomUUID().toString();
+
+        Uri imageUri = Uri.fromFile(imageFile);
+
+        StorageReference imageRef = storageRef.child("images/" + randomKey);
+        imageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    Toast.makeText(this, "successfully uploaded image", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "failed to uploaded image, something went wrong", Toast.LENGTH_LONG).show();
+                });
     }
 
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
+    public void showPopup(Bitmap bitmap) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Upload Image");
+        builder.setMessage("upload this image to firebase?");
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+            uploadImage(bitmap);
+            dialog.dismiss();
+        });
 
-    public Bitmap resizeImageByWidth(Bitmap originalImage, int targetWidth) {
-        int width = originalImage.getWidth();
-        int height = originalImage.getHeight();
-        float scaleFactor = ((float) targetWidth) / width;
-
-        Matrix matrix = new Matrix();
-        matrix.postScale(scaleFactor, scaleFactor);
-
-        return Bitmap.createBitmap(
-                originalImage, 0, 0, width, height, matrix, false);
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
-
-
     List<ImageView> imagesViews = new ArrayList<>();
 
     public void fillLayouts() {
@@ -164,30 +182,11 @@ this, "Search Complete, Downloading Images",Toast.LENGTH_LONG).show();
         });
 
         // GRID
-        ImageGridAdapter adapter = new ImageGridAdapter(this, imagesViews); // TODO copy?
-        gridView.setAdapter(adapter);
+        if (imageViewModel.getImages() != null) {
+            ImageGridAdapter adapter = new ImageGridAdapter(this, R.layout.grid_item_layout, imageViewModel.getImages(), this); // TODO copy?
+            gridView.setAdapter(adapter);
+        }
 
-
-//        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-//        for (int i = 0; i < imagesViews.size(); i++) {
-//            ImageView oldImageView = imagesViews.get(i);
-//
-//            ImageView imageView = new ImageView(this);
-//            imageView.setImageDrawable(oldImageView.getDrawable());
-//
-//            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-//            params.width = screenWidth / 2;
-//            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-//
-//            imageView.setLayoutParams(params);
-//
-//            GridLayout.Spec rowSpec = GridLayout.spec(i / 2); // row
-//            GridLayout.Spec colSpec = GridLayout.spec(i % 2); // col
-//            GridLayout.LayoutParams gridParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-//            imageView.setLayoutParams(gridParams);
-//            Log.i(t, "added image to grid layout -> [" + (i / 2) + "][" + (i % 2) + "]" + " " + imageView.toString());
-//            grid.addView(imageView);
-//        }
     }
 
     boolean isGrid = false;

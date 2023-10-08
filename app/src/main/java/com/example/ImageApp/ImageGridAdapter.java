@@ -1,6 +1,7 @@
-package com.example.basicremotecall;
+package com.example.ImageApp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,20 +11,21 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class ImageGridAdapter extends ArrayAdapter<ImageView> {
+public class ImageGridAdapter extends ArrayAdapter<Bitmap> {
 
-    public ImageGridAdapter(@NonNull Context context, List<ImageView> imageViews) {
-        super(context, 0, imageViews);
+    MainActivity activity;
+    public ImageGridAdapter(@NonNull Context context, int resource, @NonNull List<Bitmap> objects, MainActivity activity) {
+        super(context, resource, objects);
+        this.activity = activity;
     }
 
     // adapted from https://www.geeksforgeeks.org/gridview-in-android-with-example/
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        ImageView imageView = getItem(position);
+        Bitmap bitmap = getItem(position);
 
         View listitemView = convertView;
         if (listitemView == null) {
@@ -32,14 +34,10 @@ public class ImageGridAdapter extends ArrayAdapter<ImageView> {
 
         assert listitemView != null;
 
-        // redundant
         ImageView gridItemImageView = listitemView.findViewById(R.id.gridItemImageView);
+        gridItemImageView.setImageBitmap(bitmap);
 
-
-        ViewGroup parentView = (ViewGroup) listitemView;
-        parentView.removeAllViews();
-
-        parentView.addView(imageView);
+        gridItemImageView.setOnClickListener(v -> activity.showPopup(bitmap));
         return listitemView;
     }
 }

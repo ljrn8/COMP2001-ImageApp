@@ -1,4 +1,4 @@
-package com.example.basicremotecall;
+package com.example.ImageApp;
 
 import android.graphics.Bitmap;
 

@@ -1,17 +1,11 @@
-package com.example.basicremotecall;
+package com.example.ImageApp;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
-import android.view.ViewGroup;
-import android.widget.GridLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +44,7 @@ public class ImageRetrievalThread extends Thread {
                 @Override
                 public void run() {
                     Toast.makeText(uiActivity, "No image found", Toast.LENGTH_LONG).show();
+
                     errorViewModel.setErrorCode(errorViewModel.getErrorCode() + 1);
                 }
             });
@@ -86,7 +81,7 @@ public class ImageRetrievalThread extends Thread {
                 Log.i(t, "getting hit object n - " + i);
                 JSONObject jHitsItem = jHits.getJSONObject(i);
 
-                String imageUrl = jHitsItem.getString("webformatURL"); // or webformatURL previewURL
+                String imageUrl = jHitsItem.getString("webformatURL");
                 imageUrls.add(imageUrl);
             }
 

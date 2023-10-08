@@ -1,4 +1,4 @@
-package com.example.basicremotecall;
+package com.example.ImageApp;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
